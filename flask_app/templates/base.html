@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Chess Position Analyser{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="{{ url_for('web.home') }}"><span class="brand-icon" aria-hidden="true">&#9822;</span> Chess Position Analyser</a>
+      <span>Read the board. Explore the position.</span>
+    </header>
+    <main>{% block content %}{% endblock %}</main>
+    <footer>Chess Position Analyser &middot; Analysis powered by Stockfish</footer>
+  </body>
+</html>

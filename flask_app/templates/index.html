@@ -1,71 +1,60 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Chess Evaluation</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            text-align: center;
-            background-color: #ffffff;
-            border: 1px solid #dddddd;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            color: #333333;
-        }
-
-        p {
-            margin-bottom: 30px;
-            font-size: 18px;
-            color: #666666;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        input[type="file"] {
-            display: block;
-            margin: 0 auto;
-            margin-bottom: 20px;
-        }
-
-        button[type="submit"] {
-            background-color: #007bff;
-            color: #ffffff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        button[type="submit"]:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Chess Position Evaluator</h1>
-        <p>Upload an image of the chess position</p>
-        <form method="POST" enctype="multipart/form-data" action="/" id="upload-form">
-            <input type="file" name="file" accept="image/*" required>
-            <br>
-            <button type="submit" name="play_as" value="white">Play as White</button>
-            <button type="submit" name="play_as" value="black">Play as Black</button>
-        </form>
-    </div>
-</body>
-</html>
+{% extends "base.html" %}
+{% set form_values = form_values | default({}) %}
+{% block content %}
+<section class="intro">
+  <p class="eyebrow">A closer look at your next move</p>
+  <h1>Analyse a chess position.</h1>
+  <p>Start with a board image. Get a suggested move, an evaluation, and a position you can explore.</p>
+</section>
+{% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
+<div class="input-grid">
+  <section class="card upload-card">
+    <div class="card-heading"><span class="step">01</span><h2>Choose your position</h2></div>
+    <form method="post" enctype="multipart/form-data" action="{{ url_for('web.home') }}">
+      <input type="hidden" name="source" value="image">
+      <div class="upload-area" id="drop-zone">
+        <span class="upload-icon" aria-hidden="true">&#9822;</span>
+        <label for="file">Drop a board image here<span>or click to choose a file</span></label>
+        <input id="file" type="file" name="file" accept="image/png,image/jpeg,image/webp"
+          data-max-bytes="{{ config['MAX_CONTENT_LENGTH'] }}" required>
+        <p class="note" id="file-name">PNG, JPEG or WebP &middot; up to {{ '%g' | format(config['MAX_CONTENT_LENGTH'] / 1048576) }} MB</p>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="turn">Whose turn is it?</label>
+          <select id="turn" name="turn">
+            <option value="white" {% if form_values.get('turn') != 'black' %}selected{% endif %}>White to move</option>
+            <option value="black" {% if form_values.get('turn') == 'black' %}selected{% endif %}>Black to move</option>
+          </select>
+        </div>
+        <div>
+          <label for="orientation">Side at the bottom</label>
+          <select id="orientation" name="orientation">
+            <option value="white" {% if form_values.get('orientation') != 'black' %}selected{% endif %}>White at the bottom</option>
+            <option value="black" {% if form_values.get('orientation') == 'black' %}selected{% endif %}>Black at the bottom</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit">Analyse position <span aria-hidden="true">&rarr;</span></button>
+      <p class="note">Use a clear, straight-on image of a 2D board. You can correct the recognised position afterwards.</p>
+    </form>
+    <details class="fen-input" {% if form_values.get('source') == 'fen' %}open{% endif %}>
+      <summary>Have a FEN already?</summary>
+      <form method="post" action="{{ url_for('web.home') }}">
+        <input type="hidden" name="source" value="fen">
+        <label for="fen">Position in FEN format</label>
+        <textarea id="fen" name="fen" rows="3" required spellcheck="false"
+          placeholder="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1">{{ form_values.get('fen', '') }}</textarea>
+        <p class="note">Include all six fields to preserve the turn, castling rights, and move counters.</p>
+        <button class="secondary" type="submit">Analyse FEN</button>
+      </form>
+    </details>
+  </section>
+  <section class="card preview-card">
+    <div class="preview-heading"><span class="eyebrow" id="preview-label">Example board</span><span class="tag">8 &times; 8</span></div>
+    <img id="board-preview" class="image-preview" src="{{ url_for('static', filename='example-board.png') }}" alt="Example chessboard in the initial position">
+    <p class="note" id="preview-note">Your uploaded image will appear here.</p>
+    <div class="preview-steps"><span>Read the board</span><span>&rarr;</span><span>Find a move</span><span>&rarr;</span><span>Explore</span></div>
+  </section>
+</div>
+{% endblock %}

@@ -1,93 +1,40 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Chess Evaluation Result</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border: 1px solid #dddddd;
-            padding: 30px;
-            border-radius: 5px;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-        }
-
-        .left-section {
-            flex: 1;
-            text-align: center;
-        }
-
-        .right-section {
-            flex: 2;
-            padding-left: 30px;
-        }
-
-        h1 {
-            color: #007bff;
-            margin-bottom: 20px;
-            font-size: 28px;
-        }
-
-        p {
-            margin-bottom: 10px;
-            font-size: 20px;
-            color: #333333;
-        }
-
-        img {
-            width: 600px;
-            height: 420px;
-            border: 1px solid #dddddd;
-            border-radius: 5px;
-        }
-
-        a {
-            display: block;
-            color: #007bff;
-            text-decoration: none;
-            margin-top: 20px;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        .highlight {
-            background-color: #f5f5f5;
-            padding: 5px;
-            border-radius: 5px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="left-section">
-            {% if fen %}
-            <img src="{{url_for('static', filename=board_svg)}}" alt="Chess Board">
-            {% endif %}
-        </div>
-        <div class="right-section">
-            <h1 class="highlight">Evaluation Result</h1>
-            {% if fen %}
-            <p><span class="highlight">Best Move:</span> {{ best_move }}</p>
-            <p><span class="highlight">Evaluation:</span> {{ evaluation }}</p>
-            <p><span class="highlight">Game State:</span> {{ game_state }}</p>
-            <p><span class="highlight">Want to analyze further?</span> Go to <a href="https://lichess.org/analysis/{{fen}}">Lichess</a></p>
-            <p><span class="highlight">Not the right orientation? </span><a href="{{ url_for('flip', fen=fen,play_as=play_as) }}">Flip board</a></p>
-            <a href="/">Back to Home</a>
-            {% endif %}
-        </div>
+{% extends "base.html" %}
+{% block title %}Position analysis · Chess Position Analyser{% endblock %}
+{% block content %}
+<section class="intro compact">
+  <p class="eyebrow">{{ result.turn }} to move</p>
+  <h1>Your position, analysed.</h1>
+</section>
+<div class="result-grid">
+  <section class="card board-card" aria-label="Input position with suggested move">
+    <div class="board">{{ result.board_svg | safe }}</div>
+    <p class="note">The arrow shows the suggested move on the input position.</p>
+  </section>
+  <section class="card">
+    <dl class="metrics">
+      <div><dt>Suggested move</dt><dd>{{ result.best_move or 'No move — game over' }}</dd></div>
+      <div><dt>Evaluation</dt><dd>{{ result.evaluation }}</dd></div>
+    </dl>
+    {% if result.best_move_uci %}<p class="note">UCI notation: {{ result.best_move_uci }}</p>{% endif %}
+    <p>{{ result.game_state }}</p>
+    <p class="note">Positive pawn scores favour White; negative scores favour Black.
+      Mate scores are shown separately.</p>
+    {% if from_image %}
+    <div class="notice">Check the reconstructed board before relying on the analysis.
+      Castling rights and en passant are unset; move counters start at 0 and 1.
+      Correct the FEN below if you know the game history.</div>
+    {% endif %}
+    <form method="post" action="{{ url_for('web.home') }}">
+      <input type="hidden" name="source" value="fen">
+      <div class="fen-heading"><label for="fen">Position FEN</label><button type="button" class="copy-button" id="copy-fen">Copy FEN</button></div>
+      <textarea id="fen" name="fen" rows="4" required spellcheck="false">{{ result.fen }}</textarea>
+      <p class="note">Edit the position here to analyse it again.</p>
+      <button type="submit">Analyse edited position</button>
+    </form>
+    <div class="links">
+      <a href="{{ lichess_url }}" target="_blank" rel="noopener noreferrer">Explore on Lichess ↗</a>
+      <a href="{{ url_for('web.home') }}">Analyse another image</a>
     </div>
-</body>
-</html>
+  </section>
+</div>
+{% endblock %}

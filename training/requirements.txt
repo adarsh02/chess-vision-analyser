@@ -1,0 +1,3 @@
+-r ../requirements.txt
+resvg-py>=0.5,<1
+PyYAML>=6,<7
